@@ -1,12 +1,13 @@
 """
 Builds the monthly digest email content from ArticlePages published
 (first_published_at) in a given month. Pure data/HTML building — no
-Brevo calls here, so it's easy to test in isolation.
+Mailchimp calls here, so it's easy to test in isolation.
 """
 import calendar
 from datetime import date
 
 from django.conf import settings
+from django.utils.html import escape
 
 from articles.models import ArticlePage
 
@@ -59,20 +60,23 @@ def build_monthly_digest(year: int, month: int):
         "<p>This month's pieces:</p>",
     ]
     for section_title, section_articles in sections.items():
-        parts.append(f"<h2 style='font-family:Georgia,serif;font-size:18px;'>{section_title}</h2>")
+        parts.append(
+            f"<h2 style='font-family:Georgia,serif;font-size:18px;'>{escape(section_title)}</h2>"
+        )
         for article in section_articles:
             parts.append(
                 "<div style='margin-bottom:16px;'>"
-                f"<a href='{_absolute_url(article)}' style='font-size:16px;font-weight:bold;color:#24558a;'>{article.title}</a>"
-                f"<p style='margin:4px 0;color:#444;'>{article.intro}</p>"
+                f"<a href='{_absolute_url(article)}' style='font-size:16px;font-weight:bold;color:#24558a;'>{escape(article.title)}</a>"
+                f"<p style='margin:4px 0;color:#444;'>{escape(article.intro)}</p>"
                 "</div>"
             )
 
-            parts.append(
-                "<hr style='margin-top:32px;border:none;border-top:1px solid #ddd;'>"
-                "<p style='font-size:12px;color:#777;'>"
-                "You're receiving this because you subscribed to The Docket. "
-                "<a href='{{ unsubscribe }}'>Unsubscribe</a></p>"
+    parts.append(
+        "<hr style='margin-top:32px;border:none;border-top:1px solid #ddd;'>"
+        "<p style='font-size:12px;color:#777;'>"
+        "You're receiving this because you subscribed to The Docket. "
+        "<a href='*|UNSUB|*'>Unsubscribe</a></p>"
+        "<p style='font-size:12px;color:#777;'>*|HTML:LIST_ADDRESS_HTML|*</p>"
     )
 
     html_content = "\n".join(parts)

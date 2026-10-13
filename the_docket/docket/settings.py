@@ -9,14 +9,18 @@ from pathlib import Path
 
 import dj_database_url
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-insecure-key-change-me")
-
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
+
+_secret_key = os.environ.get("DJANGO_SECRET_KEY", "")
+if not DEBUG and not _secret_key:
+    raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.")
+SECRET_KEY = _secret_key or "dev-only-insecure-key-change-me"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
@@ -115,6 +119,12 @@ STORAGES = {
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # --- Wagtail ---
@@ -128,28 +138,47 @@ WAGTAILADMIN_BASE_URL = os.environ.get("WAGTAILADMIN_BASE_URL", "http://localhos
 WAGTAIL_ALLOW_UNICODE_SLUGS = False
 
 # --- Rich text: which formatting controls are available to editors ---
-# 'bold', 'italic', 'underline' cover the brief's formatting requirement.
-# Alignment/indent are registered as extra Draftail features in
-# subscribers/wagtail_hooks.py (see README for how to extend fonts further).
+# Custom underline, alignment, and font styles are registered in
+# articles/wagtail_hooks.py.
 WAGTAILADMIN_RICH_TEXT_EDITORS = {
     "default": {
         "WIDGET": "wagtail.admin.rich_text.DraftailRichTextArea",
         "OPTIONS": {
             "features": [
-                "bold", "italic", "underline",
-                "ol", "ul", "link", "document-link",
+                "bold", "italic", "underline", "ol", "ul", "link",
                 "align-left", "align-center", "align-right",
-                "superscript", "subscript",
                 "font-times", "font-sitka", "font-garamond",
             ]
         },
     }
 }
 
-# --- Brevo (subscriber list + transactional emails) ---
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "")
-BREVO_LIST_ID = os.environ.get("BREVO_LIST_ID", "")
+# --- Mailchimp (subscriber list + monthly draft campaign) ---
+MAILCHIMP_API_KEY = os.environ.get("MAILCHIMP_API_KEY", "")
+MAILCHIMP_AUDIENCE_ID = os.environ.get("MAILCHIMP_AUDIENCE_ID", "")
+MAILCHIMP_REPLY_TO = os.environ.get("MAILCHIMP_REPLY_TO", "thedocketrepository@outlook.com")
 OWNER_NOTIFICATION_EMAIL = os.environ.get(
     "OWNER_NOTIFICATION_EMAIL", "thedocketrepository@outlook.com"
 )
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "")
+
+# --- Email for the thank-you and owner notification (plain SMTP) ---
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ.get(
+    "DEFAULT_FROM_EMAIL", EMAIL_HOST_USER or "noreply@localhost"
+)
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend"
+    if EMAIL_HOST else "django.core.mail.backends.console.EmailBackend"
+)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "INFO"},
+}

@@ -1,6 +1,6 @@
 """
-Creates (or refreshes) the monthly digest as a DRAFT campaign in Brevo.
-Never sends anything — sending is a manual step in Brevo's dashboard.
+Creates (or refreshes) the monthly digest as a DRAFT campaign in Mailchimp.
+Never sends anything — sending is a manual step in Mailchimp's dashboard.
 
 Usage:
     python manage.py create_monthly_digest
@@ -12,14 +12,14 @@ Usage:
 from datetime import date
 
 from dateutil.relativedelta import relativedelta
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from articles.digest import build_monthly_digest
-from subscribers import brevo
+from subscribers.mailchimp import create_or_update_monthly_draft
 
 
 class Command(BaseCommand):
-    help = "Create or update this month's digest as a Brevo draft campaign."
+    help = "Create or update this month's digest as a Mailchimp draft campaign."
 
     def add_arguments(self, parser):
         parser.add_argument("--year", type=int, default=None)
@@ -40,20 +40,23 @@ class Command(BaseCommand):
             ))
             return
 
-        campaign_name = f"The Docket — Monthly Digest — {year}-{month:02d}"
-        result = brevo.create_or_update_monthly_draft(campaign_name, subject, html_content)
+        campaign_title = f"The Docket — Monthly Digest — {year}-{month:02d}"
+        result = create_or_update_monthly_draft(
+            title=campaign_title, subject=subject, html_content=html_content
+        )
 
         if result == "created":
             self.stdout.write(self.style.SUCCESS(
-                f"Created draft '{campaign_name}' with {count} article(s). Review it in Brevo."
+                f"created: draft '{campaign_title}' with {count} article(s). Review it in Mailchimp."
             ))
         elif result == "updated":
             self.stdout.write(self.style.SUCCESS(
-                f"Updated existing draft '{campaign_name}' with {count} article(s)."
+                f"updated: existing draft '{campaign_title}' with {count} article(s)."
             ))
         elif result == "skipped_already_sent":
             self.stdout.write(self.style.WARNING(
-                f"'{campaign_name}' was already sent/queued — left untouched."
+                f"skipped_already_sent: '{campaign_title}' was already sent/queued — left untouched."
             ))
         else:
-            self.stdout.write(self.style.ERROR(f"Failed to create/update '{campaign_name}'."))
+            self.stdout.write(self.style.ERROR(f"failed: could not create/update '{campaign_title}'."))
+            raise CommandError(f"Could not create/update Mailchimp campaign '{campaign_title}'.")

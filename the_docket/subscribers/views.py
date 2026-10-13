@@ -4,7 +4,7 @@ from django.core.validators import validate_email
 from django.http import HttpResponseRedirect
 from django.views.decorators.http import require_POST
 
-from . import brevo
+from .mailchimp import handle_new_subscriber
 
 
 @require_POST
@@ -18,6 +18,6 @@ def subscribe(request):
         messages.error(request, "That doesn't look like a valid email address.")
         return HttpResponseRedirect(redirect_to)
 
-    brevo.handle_new_subscriber(email)
+    handle_new_subscriber(email)
     messages.success(request, "Thank you — your subscription has been recorded.")
     return HttpResponseRedirect(redirect_to)
