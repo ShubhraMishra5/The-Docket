@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+  <section class="hero dotted-section">
+    <div class="hero__main">
+      <p class="eyebrow">{{ page.eyebrow }}</p>
+      <h1>{{ page.hero_heading }}</h1>
+      <div class="hero__intro">{{ page.hero_intro|richtext }}</div>
+      <a class="text-link" href="#recent">Read the latest <span aria-hidden="true">&#8599;</span></a>
+    </div>
+    <div class="hero__side">
+      {% if page.hero_image %}
+        {% image page.hero_image width-800 as hero_img %}
+        <div class="hero__photo">
+          <img src="{{ hero_img.url }}" alt="" />
+        </div>
+      {% endif %}
+      <aside class="premise">
+        <p class="eyebrow">{{ page.premise_heading }}</p>
+        <div class="premise__body">{{ page.premise_body|richtext }}</div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="practice-areas dotted-section">
+    <p class="eyebrow">Practice areas</p>
+    <ol class="practice-list">
+      {% for section in nav_sections %}
+        <li><a href="{% pageurl section %}"><span>{{ forloop.counter|stringformat:"02d" }}</span>{{ section.nav_label }} <b>&#8599;</b></a></li>
+      {% endfor %}
+    </ol>
+  </section>
+
+  <section class="recent dotted-section" id="recent">
+    <div class="recent__heading">
+      <h2>Recent pieces</h2>
+    </div>
+    <div class="post-grid">
+      {% for article in recent_pieces %}
+        <article class="post-card">
+          <div class="post-card__meta">
+            <span>{{ article.get_piece_type_display }}</span>
+            <time datetime="{{ article.date|date:'Y-m-d' }}">{{ article.date }}</time>
+          </div>
+          <h3><a href="{% pageurl article %}">{{ article.title }}</a></h3>
+          <p>{{ article.intro }}</p>
+          <div class="post-card__footer">
+            <span>{{ article.author }}</span>
+            <a href="{% pageurl article %}">Read piece <b>&#8250;</b></a>
+          </div>
+        </article>
+      {% empty %}
+        <p>No pieces published yet.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="offer">
+    <div class="offer__grid">
+      <div class="offer__heading-col">
+        <p class="eyebrow">What we offer</p>
+        <h2>{{ page.offer_heading }}</h2>
+      </div>
+      <div class="offer__body-col">
+        <div>{{ page.offer_body|richtext }}</div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

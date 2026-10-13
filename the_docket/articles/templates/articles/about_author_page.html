@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+  <section class="about-author dotted-section">
+    <p class="eyebrow">About the author</p>
+    <h1>{{ page.title }}</h1>
+    <div>{{ page.bio|richtext }}</div>
+    <p>
+      <a href="{{ page.linkedin_url }}" target="_blank" rel="noreferrer">LinkedIn &#8599;</a>
+      &nbsp;|&nbsp;
+      {{ page.phone }} &nbsp;|&nbsp;
+      <a href="mailto:{{ page.email }}">{{ page.email }}</a>
+    </p>
+  </section>
+{% endblock %}

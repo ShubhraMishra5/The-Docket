@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+  <section class="section-intro dotted-section">
+    <p class="eyebrow">Practice area</p>
+    <h1>{{ page.title }}</h1>
+    <div>{{ page.intro|richtext }}</div>
+
+    <form class="search-form" method="get">
+      <label class="sr-only" for="site-search">Search {{ page.title }}</label>
+      <span aria-hidden="true">&#8981;</span>
+      <input id="site-search" type="search" name="q" value="{{ search_query }}" placeholder="Search {{ page.title }}" />
+    </form>
+
+    <nav class="content-type-filter" aria-label="Filter by type">
+      <a href="?{% if search_query %}q={{ search_query }}&{% endif %}" class="{% if not active_type %}is-active{% endif %}">All</a>
+      {% for value, label in content_types %}
+        <a href="?type={{ value }}{% if search_query %}&q={{ search_query }}{% endif %}" class="{% if active_type == value %}is-active{% endif %}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+  </section>
+
+  <section class="post-grid dotted-section">
+    {% for article in articles %}
+      <article class="post-card">
+        <div class="post-card__meta">
+          <span>{{ article.get_content_type_display }}</span>
+          <time datetime="{{ article.date|date:'Y-m-d' }}">{{ article.date }}</time>
+        </div>
+        <h3><a href="{% pageurl article %}">{{ article.title }}</a></h3>
+        <p>{{ article.intro }}</p>
+        <div class="post-card__footer">
+          <span>{{ article.author }}</span>
+          <a href="{% pageurl article %}">Read piece <b>&#8250;</b></a>
+        </div>
+      </article>
+    {% empty %}
+      <p>No pieces match your search yet.</p>
+    {% endfor %}
+  </section>
+{% endblock %}
