@@ -186,3 +186,10 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 500; margin-top: 0; }
   .site-footer { grid-template-columns: 1fr; }
   .offer__grid { grid-template-columns: 1fr; }
 }
+
+.align-left   { text-align: left; }
+.align-center { text-align: center; }
+.align-right  { text-align: right; }
+.font-times    { font-family: "Times New Roman", Times, serif; }
+.font-sitka    { font-family: "Sitka Small", Georgia, serif; }
+.font-garamond { font-family: Garamond, "EB Garamond", serif; }

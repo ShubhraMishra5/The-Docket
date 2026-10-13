@@ -107,6 +107,9 @@ class ArticlePage(Page):
                         "align-left",
                         "align-center",
                         "align-right",
+                        "font-times",
+                        "font-sitka",
+                        "font-garamond",
                     ]
                 ),
             ),
