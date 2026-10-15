@@ -1,6 +1,9 @@
 # Render Postgres database resources do not support rootDir or environment groups.
-# The web and cron services below both use the shared group and the database URL.
-# Render also disallows sync:false inside groups, so secret prompts are set on each service.
+# The web service uses the shared group and the database URL.
+# Render also disallows sync:false inside groups, so secret prompts are set on the service.
+#
+# The monthly digest cron job is intentionally left out for now. Add it back once
+# Mailchimp is set up (see the cron block saved in the project notes / git history).
 envVarGroups:
   - name: the-docket-shared
     envVars:
@@ -12,8 +15,6 @@ envVarGroups:
         value: thedocketrepository@outlook.com
       - key: EMAIL_PORT
         value: "587"
-      - key: PYTHON_VERSION
-        value: "3.13.3"
 
 services:
   - type: web
@@ -25,49 +26,8 @@ services:
     # TODO: choose a paid web service plan in Render; plan intentionally omitted.
     envVars:
       - fromGroup: the-docket-shared
-      - key: DATABASE_URL
-        fromDatabase:
-          name: the-docket-db
-          property: connectionString
-      - key: DJANGO_SECRET_KEY
-        sync: false
-      - key: DJANGO_ALLOWED_HOSTS
-        sync: false
-      - key: DJANGO_CSRF_TRUSTED_ORIGINS
-        sync: false
-      - key: MAILCHIMP_API_KEY
-        sync: false
-      - key: MAILCHIMP_AUDIENCE_ID
-        sync: false
-      - key: PUBLIC_BASE_URL
-        sync: false
-      - key: WAGTAILADMIN_BASE_URL
-        sync: false
-      - key: EMAIL_HOST
-        sync: false
-      - key: EMAIL_HOST_USER
-        sync: false
-      - key: EMAIL_HOST_PASSWORD
-        sync: false
-      - key: DEFAULT_FROM_EMAIL
-        sync: false
-      - key: DJANGO_SUPERUSER_USERNAME
-        sync: false
-      - key: DJANGO_SUPERUSER_EMAIL
-        sync: false
-      - key: DJANGO_SUPERUSER_PASSWORD
-        sync: false
-
-  - type: cron
-    name: the-docket-monthly-digest
-    runtime: python
-    rootDir: the_docket
-    buildCommand: ./build.sh
-    startCommand: python manage.py create_monthly_digest
-    schedule: "0 3 1 * *"
-    # TODO: choose a paid cron plan in Render; plan intentionally omitted.
-    envVars:
-      - fromGroup: the-docket-shared
+      - key: PYTHON_VERSION
+        value: "3.13.3"
       - key: DATABASE_URL
         fromDatabase:
           name: the-docket-db

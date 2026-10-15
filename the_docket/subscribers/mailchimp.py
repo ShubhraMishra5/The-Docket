@@ -2,8 +2,9 @@
 Mailchimp integration for The Docket.
 
 1. add_subscriber(email)            -> adds/updates a contact in your Audience
-2. handle_new_subscriber(email)     -> add to Audience + thank-you email to the
-                                       subscriber + notification to the owner
+2. handle_new_subscriber(email)     -> save locally + add to Audience + thank-you
+                                       email to the subscriber + notification to
+                                       the owner
 3. create_or_update_monthly_draft() -> creates (or refreshes) a DRAFT campaign
                                        for Tvisha to review and send herself
 
@@ -75,9 +76,24 @@ def _safe_mail(subject, message, to):
         return False
 
 
+def _save_locally(email):
+    """Keep our own copy so no subscriber is ever lost. Returns the row or None."""
+    try:
+        from .models import Subscriber
+        sub, _ = Subscriber.objects.get_or_create(email=email.strip().lower())
+        return sub
+    except Exception:
+        logger.exception("Could not save subscriber locally: %s", email)
+        return None
+
+
 def handle_new_subscriber(email):
     """Called by the subscribe form. Never raises, so the form never crashes."""
+    sub = _save_locally(email)
     added = add_subscriber(email)
+    if added and sub and not sub.synced_to_mailchimp:
+        sub.synced_to_mailchimp = True
+        sub.save(update_fields=["synced_to_mailchimp"])
     _safe_mail(
         "Welcome to The Docket",
         "Thank you for subscribing to The Docket.\n\n"
